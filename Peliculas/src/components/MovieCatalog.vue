@@ -1,32 +1,49 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+
 import MovieCard from './MovieCard.vue'
 import MovieFilters from './MovieFilters.vue'
+
 import type { Movie } from '../types/movie'
+
 import { supabase } from '../lib/supabase'
+
 import { fromPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
 const movies = ref<Movie[]>([])
-const visibleMovies = ref<Movie[]>([])
+
 const isLoading = ref(true)
+
 const loadError = ref('')
 
-const loadMovies = async () => {
+const currentPage = ref(1)
+
+const totalMovies = ref(0)
+
+const moviesPerPage = 6
+
+const loadMovies = async (page = 1) => {
   isLoading.value = true
   loadError.value = ''
 
   try {
-    const { data, error } = await supabase
+    const start = (page - 1) * moviesPerPage
+    const end = start + moviesPerPage - 1
+
+    const { data, error, count } = await supabase
       .from('Pelicula')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('title', { ascending: true })
+      .range(start, end)
 
     if (error) throw error
 
     movies.value = (data ?? []).map((row) =>
       fromPeliculaRow(row as PeliculaRow),
     )
-    visibleMovies.value = movies.value
+
+    totalMovies.value = count ?? 0
+    currentPage.value = page
   } catch (error) {
     loadError.value =
       error instanceof Error
@@ -37,37 +54,116 @@ const loadMovies = async () => {
   }
 }
 
-onMounted(loadMovies)
+const totalPages = computed(() => {
+  return Math.ceil(totalMovies.value / moviesPerPage)
+})
+
+const pages = computed(() => {
+  return Array.from(
+    { length: totalPages.value },
+    (_, index) => index + 1,
+  )
+})
+
+const updateMovies = (movies: Movie[]) => {
+  // Temporalmente mantenemos esta función para no romper
+  // MovieFilters. Los filtros se adaptarán después.
+}
+
+const goToPage = (page: number) => {
+  if (page < 1 || page > totalPages.value) return
+
+  loadMovies(page)
+}
+
+const previousPage = () => {
+  if (currentPage.value > 1) {
+    loadMovies(currentPage.value - 1)
+  }
+}
+
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    loadMovies(currentPage.value + 1)
+  }
+}
+
+onMounted(() => {
+  loadMovies()
+})
 </script>
 
 <template>
   <div class="catalog-root">
-    <MovieFilters :movies="movies" @filter="visibleMovies = $event" />
+    <MovieFilters
+      :movies="movies"
+      @filter="updateMovies"
+    />
 
     <p v-if="isLoading" class="status-message" role="status">
       Cargando películas...
     </p>
 
-    <section v-else-if="loadError" class="status-message error-state" role="alert">
+    <section
+      v-else-if="loadError"
+      class="status-message error-state"
+      role="alert"
+    >
       <p>{{ loadError }}</p>
-      <button type="button" @click="loadMovies">Reintentar</button>
+
+      <button type="button" @click="loadMovies(currentPage)">
+        Reintentar
+      </button>
     </section>
 
     <p v-else-if="movies.length === 0" class="status-message">
       Aún no hay películas en la colección.
     </p>
 
-    <p v-else-if="visibleMovies.length === 0" class="status-message">
-      No hay películas que coincidan con esos filtros.
-    </p>
+    <template v-else>
+      <section
+        class="movies-grid"
+        aria-label="Películas"
+      >
+        <MovieCard
+          v-for="movie in movies"
+          :key="movie.id"
+          :movie="movie"
+        />
+      </section>
 
-    <section v-else class="movies-grid" aria-label="Películas">
-      <MovieCard
-        v-for="movie in visibleMovies"
-        :key="movie.id"
-        :movie="movie"
-      />
-    </section>
+      <nav
+        v-if="totalPages > 1"
+        class="pagination"
+        aria-label="Paginación de películas"
+      >
+        <button
+          class="pagination-button"
+          :disabled="currentPage === 1"
+          @click="previousPage"
+        >
+          Anterior
+        </button>
+
+        <button
+          v-for="page in pages"
+          :key="page"
+          class="pagination-button page-number"
+          :class="{ active: currentPage === page }"
+          @click="goToPage(page)"
+        >
+          {{ page }}
+        </button>
+
+        <button
+          class="pagination-button"
+          :disabled="currentPage === totalPages"
+          @click="nextPage"
+        >
+          Siguiente
+        </button>
+      </nav>
+    </template>
   </div>
 </template>
 
@@ -100,5 +196,45 @@ onMounted(loadMovies)
   justify-items: center;
   gap: 24px;
   margin-top: 28px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 35px;
+  margin-bottom: 20px;
+}
+
+.pagination-button {
+  min-width: 42px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagination-button:hover:not(:disabled) {
+  background: #f3f4f6;
+}
+
+.pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-button.active {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.page-number {
+  min-width: 40px;
 }
 </style>

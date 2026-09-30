@@ -27,6 +27,10 @@ const cancelLogout = () => {
   showLogoutModal.value = false
 }
 
+const goToAbout = () => {
+  window.location.assign('/about')
+}
+
 const confirmLogout = async () => {
   logoutError.value = ''
 
@@ -35,7 +39,7 @@ const confirmLogout = async () => {
     if (error) throw error
 
     showLogoutModal.value = false
-    window.location.assign('/')
+    window.location.assign('/login')
   } catch {
     logoutError.value = 'No se pudo cerrar la sesión. Inténtalo de nuevo.'
   }
@@ -59,6 +63,13 @@ const confirmLogout = async () => {
       </button>
 
       <button
+        :class="{ active: routePath === '/about' }"
+        @click="goToAbout"
+      >
+        Acerca de
+      </button>
+
+      <button
         class="add-button"
         :class="{ active: routePath === '/MovieForm' }"
         @click="goToCreateMovie"
@@ -70,7 +81,7 @@ const confirmLogout = async () => {
       <button class="logout-button" @click="askLogout">
         <LogOut :size="18" />
         Salir
-       </button>
+      </button>
     </div>
     </nav>
 
