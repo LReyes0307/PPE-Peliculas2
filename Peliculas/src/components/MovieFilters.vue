@@ -4,7 +4,7 @@ import {
   Search,
   Filter,
   RotateCcw,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 import type { Movie } from '../types/movie'
 
 const props = defineProps<{

@@ -5,5 +5,8 @@ import vue from '@astrojs/vue';
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [vue()]
+  integrations: [vue()],
+  vite: {
+    envPrefix: ['PUBLIC_', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'],
+  },
 });

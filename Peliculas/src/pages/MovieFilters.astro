@@ -1,0 +1,32 @@
+---
+import MovieCatalog from '../components/MovieCatalog.vue';
+import Navbar from '../components/Navbar.vue';
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="MovieRadar | Filtros">
+	<Navbar client:load />
+	<main class="catalog-page">
+		<h1>Buscar películas</h1>
+		<MovieCatalog client:load />
+	</main>
+</Layout>
+
+<style>
+	.catalog-page {
+		width: min(1180px, calc(100% - 40px));
+		margin: 48px auto 72px;
+	}
+
+	h1 {
+		margin: 0 0 28px;
+		font-size: 32px;
+	}
+
+	@media (max-width: 600px) {
+		.catalog-page {
+			width: calc(100% - 28px);
+			margin-top: 32px;
+		}
+	}
+</style>

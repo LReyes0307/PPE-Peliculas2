@@ -1,6 +1,6 @@
 ```vue
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import {
   Film,
   User,
@@ -14,8 +14,10 @@ import {
   Image,
   FileText,
   Save,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 import type { Movie } from '../types/movie'
+import { supabase } from '../lib/supabase'
+import { fromPeliculaRow, toPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
 const props = defineProps<{
   initialMovie?: Movie
@@ -23,7 +25,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  submit: [movie: Omit<Movie, 'id'>]
+  submit: [movie: Movie]
   cancel: []
 }>()
 
@@ -41,6 +43,9 @@ const movie = reactive<Omit<Movie, 'id'>>({
   idioma: '',
   pais: '',
 })
+
+const isSubmitting = ref(false)
+const submitError = ref('')
 
 const fillForm = (data?: Movie) => {
   if (!data) return
@@ -67,18 +72,59 @@ watch(
   { immediate: true },
 )
 
-const submitForm = () => {
+const submitForm = async () => {
   if (movie.calificacion < 0 || movie.calificacion > 10) {
     alert('La calificación debe estar entre 0 y 10.')
     return
   }
 
-  emit('submit', { ...movie })
+  isSubmitting.value = true
+  submitError.value = ''
+
+  try {
+    const movieData = { ...movie }
+    const peliculaData = toPeliculaRow(movieData)
+    let savedMovie: Movie
+
+    if (props.editing && props.initialMovie) {
+      const { data, error } = await supabase
+        .from('Pelicula')
+        .update(peliculaData)
+        .eq('id', props.initialMovie.id)
+        .select()
+        .single()
+
+      if (error) throw error
+      savedMovie = fromPeliculaRow(data as PeliculaRow)
+    } else {
+      const { data, error } = await supabase
+        .from('Pelicula')
+        .insert(peliculaData)
+        .select()
+        .single()
+
+      if (error) throw error
+      savedMovie = fromPeliculaRow(data as PeliculaRow)
+    }
+
+    emit('submit', savedMovie)
+  } catch (error) {
+    submitError.value =
+      error instanceof Error
+        ? error.message
+        : 'No se pudo guardar la película. Inténtalo de nuevo.'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
 <template>
   <form class="movie-form" @submit.prevent="submitForm">
+
+    <p v-if="submitError" class="submit-error" role="alert">
+      {{ submitError }}
+    </p>
 
     <div class="form-header">
       <div class="form-icon">
@@ -293,9 +339,9 @@ const submitForm = () => {
           Cancelar
         </button>
 
-        <button type="submit" class="submit-button">
+        <button type="submit" class="submit-button" :disabled="isSubmitting">
           <Save :size="18" />
-          {{ editing ? 'Actualizar película' : 'Guardar película' }}
+          {{ isSubmitting ? 'Guardando...' : editing ? 'Actualizar película' : 'Guardar película' }}
         </button>
       </div>
     </div>
@@ -306,11 +352,18 @@ const submitForm = () => {
 <style scoped>
 .movie-form {
   width: 100%;
+  box-sizing: border-box;
   padding: 32px;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   background: #ffffff;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07);
+}
+
+.submit-error {
+  margin: 0 0 18px;
+  color: #b91c1c;
+  font-size: 14px;
 }
 
 .form-header {
@@ -379,6 +432,7 @@ const submitForm = () => {
 .form-group input,
 .form-group textarea {
   width: 100%;
+  box-sizing: border-box;
   padding: 12px 13px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -514,6 +568,11 @@ const submitForm = () => {
 
 .submit-button:hover {
   background: #1d4ed8;
+}
+
+.submit-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
 }
 
 @media (max-width: 700px) {

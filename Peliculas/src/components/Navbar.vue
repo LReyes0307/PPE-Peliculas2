@@ -1,22 +1,22 @@
 <script setup lang="ts">
-import { Film, Plus, LogOut } from 'lucide-vue-next'
-import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-
-
-const router = useRouter()
-const authStore = useAuthStore()
-const route = useRoute()
+import { Film, Plus, LogOut } from '@lucide/vue'
+import { onMounted, ref } from 'vue'
+import { supabase } from '../lib/supabase'
 
 const showLogoutModal = ref(false)
+const routePath = ref('')
+const logoutError = ref('')
+
+onMounted(() => {
+  routePath.value = window.location.pathname
+})
 
 const goToMovies = () => {
-  router.push('/movies')
+  window.location.assign('/')
 }
 
 const goToCreateMovie = () => {
-  router.push('/movies/create')
+  window.location.assign('/MovieForm')
 }
 
 const askLogout = () => {
@@ -27,15 +27,24 @@ const cancelLogout = () => {
   showLogoutModal.value = false
 }
 
-const confirmLogout = () => {
-  authStore.logout()
-  showLogoutModal.value = false
-  router.push('/login')
+const confirmLogout = async () => {
+  logoutError.value = ''
+
+  try {
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
+
+    showLogoutModal.value = false
+    window.location.assign('/')
+  } catch {
+    logoutError.value = 'No se pudo cerrar la sesión. Inténtalo de nuevo.'
+  }
 }
 </script>
 
 <template>
-  <nav class="navbar">
+  <div class="navbar-root">
+    <nav class="navbar">
     <div class="logo" @click="goToMovies">
         <Film :size="24" />
         <span>MovieRadar</span>
@@ -43,7 +52,7 @@ const confirmLogout = () => {
 
     <div class="nav-links">
       <button
-        :class="{ active: route.path === '/movies' }"
+        :class="{ active: routePath === '/' }"
         @click="goToMovies"
       >
         Películas
@@ -51,7 +60,7 @@ const confirmLogout = () => {
 
       <button
         class="add-button"
-        :class="{ active: route.path === '/movies/create' }"
+        :class="{ active: routePath === '/MovieForm' }"
         @click="goToCreateMovie"
       >
         <Plus :size="18" />
@@ -63,43 +72,51 @@ const confirmLogout = () => {
         Salir
        </button>
     </div>
-  </nav>
+    </nav>
 
-  <div
-    v-if="showLogoutModal"
-    class="modal-overlay"
-    @click.self="cancelLogout"
-  >
-    <div class="modal">
-      <h2>¿Cerrar sesión?</h2>
+    <div
+      v-if="showLogoutModal"
+      class="modal-overlay"
+      @click.self="cancelLogout"
+    >
+      <div class="modal">
+        <h2>¿Cerrar sesión?</h2>
 
-      <p>
-        ¿Está seguro de que desea salir de su cuenta?
-      </p>
+        <p>
+          ¿Está seguro de que desea salir de su cuenta?
+        </p>
 
-      <div class="modal-actions">
-        <button
-          class="cancel-modal"
-          @click="cancelLogout"
-        >
-          Cancelar
-        </button>
+        <p v-if="logoutError" role="alert">{{ logoutError }}</p>
 
-        <button
-          class="confirm-modal"
-          @click="confirmLogout"
-        >
-          Sí, salir
-        </button>
+        <div class="modal-actions">
+          <button
+            class="cancel-modal"
+            @click="cancelLogout"
+          >
+            Cancelar
+          </button>
+
+          <button
+            class="confirm-modal"
+            @click="confirmLogout"
+          >
+            Sí, salir
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+.navbar-root {
+  display: contents;
+}
+
 .navbar {
   width: 100%;
   min-height: 70px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -243,5 +260,25 @@ const confirmLogout = () => {
 
 .confirm-modal:hover {
   background: #b91c1c;
+}
+
+@media (max-width: 600px) {
+  .navbar {
+    min-height: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .nav-links {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .nav-links button {
+    padding: 8px 10px;
+    font-size: 14px;
+  }
 }
 </style>

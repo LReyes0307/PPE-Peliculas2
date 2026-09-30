@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-import {Flame, ThumbsUp, CircleHelp, CircleX, Star,} from 'lucide-vue-next'
+import {Flame, ThumbsUp, CircleHelp, CircleX, Star,} from '@lucide/vue'
 import type { Movie } from '../types/movie'
 
 defineProps<{
   movie: Movie
 }>()
-
-const router = useRouter()
 
 const getRecommendation = (calificacion: number) => {
   if (calificacion >= 8) {
@@ -42,7 +39,7 @@ const getRecommendation = (calificacion: number) => {
 }
 
 const viewDetails = (id: number) => {
-  router.push(`/movies/${id}`)
+  window.location.assign(`/MovieCard?id=${id}`)
 }
 </script>
 
