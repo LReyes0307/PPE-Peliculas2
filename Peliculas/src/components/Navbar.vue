@@ -31,11 +31,16 @@ const goToAbout = () => {
   window.location.assign('/about')
 }
 
+const goToLogin = () => {
+  window.location.assign('/login')
+}
+
 const confirmLogout = async () => {
   logoutError.value = ''
 
   try {
     const { error } = await supabase.auth.signOut()
+
     if (error) throw error
 
     showLogoutModal.value = false
@@ -49,40 +54,43 @@ const confirmLogout = async () => {
 <template>
   <div class="navbar-root">
     <nav class="navbar">
-    <div class="logo" @click="goToMovies">
+      <div class="logo" @click="goToMovies">
         <Film :size="24" />
         <span>MovieRadar</span>
-    </div>
+      </div>
 
-    <div class="nav-links">
-      <button
-        :class="{ active: routePath === '/' }"
-        @click="goToMovies"
-      >
-        Películas
-      </button>
+      <div class="nav-links">
+        <button
+          :class="{ active: routePath === '/' }"
+          @click="goToMovies"
+        >
+          Películas
+        </button>
 
-      <button
-        :class="{ active: routePath === '/about' }"
-        @click="goToAbout"
-      >
-        Acerca de
-      </button>
+        <button
+          :class="{ active: routePath === '/about' }"
+          @click="goToAbout"
+        >
+          Acerca de
+        </button>
 
-      <button
-        class="add-button"
-        :class="{ active: routePath === '/MovieForm' }"
-        @click="goToCreateMovie"
-      >
-        <Plus :size="18" />
-        Agregar película
-      </button>
+        <button
+          class="add-button"
+          :class="{ active: routePath === '/MovieForm' }"
+          @click="goToCreateMovie"
+        >
+          <Plus :size="18" />
+          Agregar película
+        </button>
 
-      <button class="logout-button" @click="askLogout">
-        <LogOut :size="18" />
-        Salir
-      </button>
-    </div>
+        <button
+          class="logout-button"
+          @click="askLogout"
+        >
+          <LogOut :size="18" />
+          Salir
+        </button>
+      </div>
     </nav>
 
     <div
@@ -97,7 +105,12 @@ const confirmLogout = async () => {
           ¿Está seguro de que desea salir de su cuenta?
         </p>
 
-        <p v-if="logoutError" role="alert">{{ logoutError }}</p>
+        <p
+          v-if="logoutError"
+          role="alert"
+        >
+          {{ logoutError }}
+        </p>
 
         <div class="modal-actions">
           <button
@@ -165,19 +178,16 @@ const confirmLogout = async () => {
   transition: all 0.2s ease;
 }
 
-/* Botón seleccionado */
 .nav-links button.active {
   background: #374151;
   border-color: #4b5563;
 }
 
-/* Hover de botones normales */
 .nav-links button:hover {
   background: #1f2937;
   border-color: #374151;
 }
 
-/* Agregar película */
 .nav-links .add-button {
   background: transparent;
   color: #ffffff;
@@ -199,7 +209,6 @@ const confirmLogout = async () => {
   border-color: transparent;
 }
 
-/* Salir */
 .nav-links .logout-button {
   color: #fca5a5;
 }
@@ -209,7 +218,6 @@ const confirmLogout = async () => {
   border-color: #7f1d1d;
 }
 
-/* Modal */
 .modal-overlay {
   position: fixed;
   inset: 0;

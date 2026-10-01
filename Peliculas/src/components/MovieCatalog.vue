@@ -1,25 +1,17 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-
 import MovieCard from './MovieCard.vue'
 import MovieFilters from './MovieFilters.vue'
-
 import type { Movie } from '../types/movie'
-
 import { supabase } from '../lib/supabase'
-
 import { fromPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
 const movies = ref<Movie[]>([])
-
+const filteredMovies = ref<Movie[]>([])
 const isLoading = ref(true)
-
 const loadError = ref('')
-
 const currentPage = ref(1)
-
 const totalMovies = ref(0)
-
 const moviesPerPage = 6
 
 const loadMovies = async (page = 1) => {
@@ -41,6 +33,8 @@ const loadMovies = async (page = 1) => {
     movies.value = (data ?? []).map((row) =>
       fromPeliculaRow(row as PeliculaRow),
     )
+
+    filteredMovies.value = movies.value
 
     totalMovies.value = count ?? 0
     currentPage.value = page
@@ -65,14 +59,12 @@ const pages = computed(() => {
   )
 })
 
-const updateMovies = (movies: Movie[]) => {
-  // Temporalmente mantenemos esta función para no romper
-  // MovieFilters. Los filtros se adaptarán después.
+const updateMovies = (moviesFiltered: Movie[]) => {
+  filteredMovies.value = moviesFiltered
 }
 
 const goToPage = (page: number) => {
   if (page < 1 || page > totalPages.value) return
-
   loadMovies(page)
 }
 
@@ -100,7 +92,11 @@ onMounted(() => {
       @filter="updateMovies"
     />
 
-    <p v-if="isLoading" class="status-message" role="status">
+    <p
+      v-if="isLoading"
+      class="status-message"
+      role="status"
+    >
       Cargando películas...
     </p>
 
@@ -111,13 +107,19 @@ onMounted(() => {
     >
       <p>{{ loadError }}</p>
 
-      <button type="button" @click="loadMovies(currentPage)">
+      <button
+        type="button"
+        @click="loadMovies(currentPage)"
+      >
         Reintentar
       </button>
     </section>
 
-    <p v-else-if="movies.length === 0" class="status-message">
-      Aún no hay películas en la colección.
+    <p
+      v-else-if="filteredMovies.length === 0"
+      class="status-message"
+    >
+      No se encontraron películas con los filtros seleccionados.
     </p>
 
     <template v-else>
@@ -126,7 +128,7 @@ onMounted(() => {
         aria-label="Películas"
       >
         <MovieCard
-          v-for="movie in movies"
+          v-for="movie in filteredMovies"
           :key="movie.id"
           :movie="movie"
         />

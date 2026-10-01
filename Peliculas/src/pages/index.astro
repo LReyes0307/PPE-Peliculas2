@@ -12,8 +12,8 @@ import Layout from '../layouts/Layout.astro';
 				<p class="eyebrow">BIBLIOTECA</p>
 				<h1>Películas</h1>
 			</div>
-			<a href="/MovieForm">Agregar película</a>
 		</header>
+
 		<MovieCatalog client:load />
 	</main>
 </Layout>
@@ -43,15 +43,6 @@ import Layout from '../layouts/Layout.astro';
 	h1 {
 		margin: 0;
 		font-size: 34px;
-	}
-
-	.page-heading a {
-		padding: 11px 16px;
-		border-radius: 6px;
-		background: #166534;
-		color: white;
-		font-weight: 700;
-		text-decoration: none;
 	}
 
 	@media (max-width: 560px) {
