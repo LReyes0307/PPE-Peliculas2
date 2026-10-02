@@ -1,11 +1,6 @@
 <script setup lang="ts">
 // Busca por título con GET y aplica filtros secundarios en Vue.
 import { computed, reactive } from 'vue'
-import {
-  Search,
-  Filter,
-  RotateCcw,
-} from '@lucide/vue'
 import type { Movie } from '../types/movie'
 
 const props = defineProps<{
@@ -139,8 +134,6 @@ const clearFilters = () => {
 
     <div class="filters-header">
       <div class="filters-title">
-        <Filter :size="20" />
-
         <div>
           <h2>Buscar y filtrar</h2>
           <p>Encuentra una película según sus características.</p>
@@ -151,14 +144,11 @@ const clearFilters = () => {
         class="clear-button"
         href="/"
       >
-        <RotateCcw :size="16" />
         Limpiar filtros
       </a>
     </div>
 
     <div class="search-box">
-      <Search :size="20" />
-
       <input
         v-model="filters.titulo"
         name="q"

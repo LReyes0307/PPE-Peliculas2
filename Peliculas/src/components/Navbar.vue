@@ -1,15 +1,17 @@
 <script setup lang="ts">
 // Navegación compartida con enlaces internos y cierre de sesión.
-import { Film, Plus, LogOut } from '@lucide/vue'
 import { onMounted, ref } from 'vue'
 import { supabase } from '../lib/supabase'
 
 const showLogoutModal = ref(false)
 const routePath = ref('')
 const logoutError = ref('')
+const isAuthenticated = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   routePath.value = window.location.pathname
+  const { data: { session } } = await supabase.auth.getSession()
+  isAuthenticated.value = session !== null
 })
 
 const askLogout = () => {
@@ -41,7 +43,6 @@ const confirmLogout = async () => {
   <div class="navbar-root">
     <nav class="navbar">
       <a class="logo" href="/">
-        <Film :size="24" />
         <span>MovieRadar</span>
       </a>
 
@@ -61,19 +62,27 @@ const confirmLogout = async () => {
         </a>
 
         <a
+          v-if="isAuthenticated"
           class="add-button"
           :class="{ active: routePath === '/MovieForm' }"
           href="/MovieForm"
         >
-          <Plus :size="18" />
           Agregar película
         </a>
 
+        <a
+          v-if="!isAuthenticated"
+          class="login-button"
+          href="/login"
+        >
+          Iniciar sesión
+        </a>
+
         <button
+          v-if="isAuthenticated"
           class="logout-button"
           @click="askLogout"
         >
-          <LogOut :size="18" />
           Salir
         </button>
       </div>

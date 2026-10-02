@@ -1,6 +1,5 @@
 <script setup lang="ts">
 // Muestra una película del catálogo SSR y enlaza a su detalle.
-import {Flame, ThumbsUp, CircleHelp, CircleX, Star,} from '@lucide/vue'
 import type { Movie } from '../types/movie'
 
 defineProps<{
@@ -11,7 +10,6 @@ const getRecommendation = (calificacion: number) => {
   if (calificacion >= 8) {
     return {
       text: 'Muy recomendada',
-      icon: Flame,
       class: 'recommendation-excellent',
     }
   }
@@ -19,7 +17,6 @@ const getRecommendation = (calificacion: number) => {
   if (calificacion >= 6) {
     return {
       text: 'Vale la pena',
-      icon: ThumbsUp,
       class: 'recommendation-good',
     }
   }
@@ -27,14 +24,12 @@ const getRecommendation = (calificacion: number) => {
   if (calificacion >= 4) {
     return {
       text: 'Regular',
-      icon: CircleHelp,
       class: 'recommendation-regular',
     }
   }
 
   return {
     text: 'No recomendada',
-    icon: CircleX,
     class: 'recommendation-bad',
   }
 }
@@ -55,8 +50,6 @@ const getRecommendation = (calificacion: number) => {
       <p class="genre">{{ movie.genero }}</p>
 
       <div class="rating">
-        <Star :size="18" />
-
         <span>{{ movie.calificacion }}/10</span>
       </div>
 
@@ -64,11 +57,6 @@ const getRecommendation = (calificacion: number) => {
         class="recommendation"
         :class="getRecommendation(movie.calificacion).class"
       >
-        <component
-          :is="getRecommendation(movie.calificacion).icon"
-          :size="18"
-        />
-
         <span>
           {{ getRecommendation(movie.calificacion).text }}
         </span>
