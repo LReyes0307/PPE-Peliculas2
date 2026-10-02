@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Muestra una película del catálogo SSR y enlaza a su detalle.
 import {Flame, ThumbsUp, CircleHelp, CircleX, Star,} from '@lucide/vue'
 import type { Movie } from '../types/movie'
 
@@ -38,9 +39,6 @@ const getRecommendation = (calificacion: number) => {
   }
 }
 
-const viewDetails = (id: number) => {
-  window.location.assign(`/MovieCard?id=${id}`)
-}
 </script>
 
 <template>
@@ -76,12 +74,12 @@ const viewDetails = (id: number) => {
         </span>
       </div>
 
-      <button
-            class="details-button"
-            @click="viewDetails(movie.id)"
-            >
-            Ver detalles
-        </button>
+      <a
+        class="details-button"
+        :href="`/MovieCard?id=${movie.id}`"
+      >
+        Ver detalles
+      </a>
     </div>
   </article>
 </template>
@@ -160,6 +158,8 @@ const viewDetails = (id: number) => {
 }
 
 .details-button {
+  display: block;
+  box-sizing: border-box;
   width: 100%;
   padding: 10px;
   border: none;
@@ -168,6 +168,8 @@ const viewDetails = (id: number) => {
   color: #ffffff;
   font-weight: 600;
   transition: background 0.2s ease;
+  text-align: center;
+  text-decoration: none;
 }
 
 .details-button:hover {

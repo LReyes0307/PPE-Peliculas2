@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Inicia sesión con correo y contraseña mediante Supabase Auth.
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
 
@@ -59,15 +60,15 @@ async function submitLogin() {
         @submit.prevent="submitLogin"
         novalidate
       >
-        <label for="username">Usuario</label>
+        <label for="username">Correo electrónico</label>
 
         <input
           id="username"
           v-model="username"
           name="username"
-          type="text"
-          autocomplete="username"
-          placeholder="Escribe tu usuario"
+          type="email"
+          autocomplete="email"
+          placeholder="Escribe tu correo electrónico"
           required
         />
 

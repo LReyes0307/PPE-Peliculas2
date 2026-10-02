@@ -1,119 +1,76 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+// Renderiza resultados SSR y los enlaces de paginación del catálogo.
+import { computed, ref } from 'vue'
+import Navbar from './Navbar.vue'
 import MovieCard from './MovieCard.vue'
 import MovieFilters from './MovieFilters.vue'
 import type { Movie } from '../types/movie'
-import { supabase } from '../lib/supabase'
-import { fromPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
-const movies = ref<Movie[]>([])
-const filteredMovies = ref<Movie[]>([])
-const isLoading = ref(true)
-const loadError = ref('')
-const currentPage = ref(1)
-const totalMovies = ref(0)
-const moviesPerPage = 6
-
-const loadMovies = async (page = 1) => {
-  isLoading.value = true
-  loadError.value = ''
-
-  try {
-    const start = (page - 1) * moviesPerPage
-    const end = start + moviesPerPage - 1
-
-    const { data, error, count } = await supabase
-      .from('Pelicula')
-      .select('*', { count: 'exact' })
-      .order('title', { ascending: true })
-      .range(start, end)
-
-    if (error) throw error
-
-    movies.value = (data ?? []).map((row) =>
-      fromPeliculaRow(row as PeliculaRow),
-    )
-
-    filteredMovies.value = movies.value
-
-    totalMovies.value = count ?? 0
-    currentPage.value = page
-  } catch (error) {
-    loadError.value =
-      error instanceof Error
-        ? error.message
-        : 'No se pudieron cargar las películas.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const totalPages = computed(() => {
-  return Math.ceil(totalMovies.value / moviesPerPage)
+const props = withDefaults(defineProps<{
+  movies: Movie[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+  search: string
+  error: string
+  eyebrow?: string
+  heading?: string
+}>(), {
+  movies: () => [],
+  total: 0,
+  page: 1,
+  pageSize: 6,
+  totalPages: 1,
+  search: '',
+  error: '',
+  eyebrow: 'BIBLIOTECA',
+  heading: 'Películas',
 })
 
-const pages = computed(() => {
-  return Array.from(
-    { length: totalPages.value },
-    (_, index) => index + 1,
-  )
-})
+const filteredMovies = ref<Movie[]>(props.movies)
+const pages = computed(() => Array.from(
+  { length: props.totalPages },
+  (_, index) => index + 1,
+))
 
 const updateMovies = (moviesFiltered: Movie[]) => {
   filteredMovies.value = moviesFiltered
 }
 
-const goToPage = (page: number) => {
-  if (page < 1 || page > totalPages.value) return
-  loadMovies(page)
+const pageUrl = (page: number) => {
+  const params = new URLSearchParams()
+  if (props.search) params.set('q', props.search)
+  params.set('page', String(page))
+  return `/?${params.toString()}`
 }
-
-const previousPage = () => {
-  if (currentPage.value > 1) {
-    loadMovies(currentPage.value - 1)
-  }
-}
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    loadMovies(currentPage.value + 1)
-  }
-}
-
-onMounted(() => {
-  loadMovies()
-})
 </script>
 
 <template>
+  <div>
+    <Navbar />
+    <main class="page-content">
+      <header class="page-heading">
+        <div>
+          <p class="eyebrow">{{ props.eyebrow }}</p>
+          <h1>{{ props.heading }}</h1>
+        </div>
+      </header>
+
   <div class="catalog-root">
     <MovieFilters
-      :movies="movies"
+      :movies="props.movies"
+      :initial-title="props.search"
       @filter="updateMovies"
     />
 
     <p
-      v-if="isLoading"
-      class="status-message"
-      role="status"
-    >
-      Cargando películas...
-    </p>
-
-    <section
-      v-else-if="loadError"
+      v-if="props.error"
       class="status-message error-state"
       role="alert"
     >
-      <p>{{ loadError }}</p>
-
-      <button
-        type="button"
-        @click="loadMovies(currentPage)"
-      >
-        Reintentar
-      </button>
-    </section>
+      {{ props.error }}
+    </p>
 
     <p
       v-else-if="filteredMovies.length === 0"
@@ -135,41 +92,72 @@ onMounted(() => {
       </section>
 
       <nav
-        v-if="totalPages > 1"
+        v-if="props.totalPages > 1"
         class="pagination"
         aria-label="Paginación de películas"
       >
-        <button
+        <a
           class="pagination-button"
-          :disabled="currentPage === 1"
-          @click="previousPage"
+          :class="{ disabled: props.page === 1 }"
+          :href="pageUrl(Math.max(1, props.page - 1))"
+          :aria-disabled="props.page === 1"
         >
           Anterior
-        </button>
+        </a>
 
-        <button
+        <a
           v-for="page in pages"
           :key="page"
           class="pagination-button page-number"
-          :class="{ active: currentPage === page }"
-          @click="goToPage(page)"
+          :class="{ active: props.page === page }"
+          :href="pageUrl(page)"
+          :aria-current="props.page === page ? 'page' : undefined"
         >
           {{ page }}
-        </button>
+        </a>
 
-        <button
+        <a
           class="pagination-button"
-          :disabled="currentPage === totalPages"
-          @click="nextPage"
+          :class="{ disabled: props.page === props.totalPages }"
+          :href="pageUrl(Math.min(props.totalPages, props.page + 1))"
+          :aria-disabled="props.page === props.totalPages"
         >
           Siguiente
-        </button>
+        </a>
       </nav>
     </template>
+  </div>
+    </main>
   </div>
 </template>
 
 <style scoped>
+.page-content {
+  width: min(1180px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.page-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #c2410c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+}
+
 .catalog-root {
   width: 100%;
 }
@@ -219,15 +207,18 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: center;
 }
 
 .pagination-button:hover:not(:disabled) {
   background: #f3f4f6;
 }
 
-.pagination-button:disabled {
+.pagination-button.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
 .pagination-button.active {
@@ -238,5 +229,17 @@ onMounted(() => {
 
 .page-number {
   min-width: 40px;
+}
+
+@media (max-width: 560px) {
+  .page-content {
+    width: min(100% - 28px, 1180px);
+    padding-top: 32px;
+  }
+
+  .page-heading {
+    align-items: start;
+    flex-direction: column;
+  }
 }
 </style>

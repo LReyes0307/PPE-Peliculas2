@@ -1,46 +1,52 @@
-# Astro Starter Kit: Basics
+# MovieRadar
 
-```sh
-npm create astro@latest -- --template basics
+Catálogo de películas con Astro, Vue y Supabase.
+
+## Requisitos
+
+- Node.js 22.12 o posterior
+- Proyecto Supabase con la tabla `public."Pelicula"`
+
+## Configuración local
+
+Desde la carpeta `Peliculas`:
+
+```powershell
+npm install
+Copy-Item .env.example .env
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Completa `SUPABASE_URL` y `SUPABASE_PUBLISHABLE_KEY` en `.env`. Son valores públicos; no expongas claves secretas.
 
-## 🚀 Project Structure
+Aplica `supabase/migrations/20261001000000_pelicula_rls.sql` desde el SQL Editor de Supabase. La prueba pgTAP está en `supabase/tests/pelicula_rls.test.sql` y se ejecuta con `supabase test db` si Supabase CLI está enlazado al proyecto y pgTAP habilitado.
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-/
-├── public/
-│   └── favicon.svg
-├── src
-│   ├── assets
-│   │   └── astro.svg
-│   ├── components
-│   │   └── Welcome.astro
-│   ├── layouts
-│   │   └── Layout.astro
-│   └── pages
-│       └── index.astro
-└── package.json
+```powershell
+npm run dev
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Rutas y renderizado
 
-## 🧞 Commands
+- `/`: SSR público, búsqueda por título con `?q=` y paginación con `?page=`; los títulos aparecen en el HTML inicial.
+- `/MovieForm` y `/MovieCard`: HTML SSG compartido; el CRUD consulta datos tras autenticar.
+- `/login`, `/register`, `/about` y `/Navbar`: HTML SSG.
+- Astro `ClientRouter` habilita View Transitions en la navegación interna.
 
-All commands are run from the root of the project, from a terminal:
+RLS permite lectura pública y reserva las escrituras a usuarios autenticados. Las películas forman un catálogo compartido.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+## Verificación
 
-## 👀 Want to learn more?
+```powershell
+npm run build
+npm run preview
+```
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+El adaptador `@astrojs/cloudflare` está configurado para Workers. No se realizó el despliegue y la URL pública queda pendiente.
+
+## Taller 2
+
+Consulta [`Taller-2-Guia.md`](Taller-2-Guia.md) para el mapa de requisitos, cómo explicarlos en clase, la demostración sugerida y las rutas de implementación.
+
+- Repositorio público: [PPE-Peliculas2](https://github.com/LReyes0307/PPE-Peliculas2)
+- URL del Worker: pendiente de despliegue.
+- Dry-run de Wrangler: `npx wrangler deploy --dry-run`.
+

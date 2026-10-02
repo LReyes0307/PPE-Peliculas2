@@ -1,5 +1,5 @@
-```vue
 <script setup lang="ts">
+// Envía altas y cambios de películas a la API protegida por sesión.
 import { reactive, ref, watch } from 'vue'
 import {
   Film,
@@ -16,8 +16,6 @@ import {
   Save,
 } from '@lucide/vue'
 import type { Movie } from '../types/movie'
-import { supabase } from '../lib/supabase'
-import { fromPeliculaRow, toPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
 const props = defineProps<{
   initialMovie?: Movie
@@ -83,31 +81,34 @@ const submitForm = async () => {
 
   try {
     const movieData = { ...movie }
-    const peliculaData = toPeliculaRow(movieData)
-    let savedMovie: Movie
+    let res: Response
 
     if (props.editing && props.initialMovie) {
-      const { data, error } = await supabase
-        .from('Pelicula')
-        .update(peliculaData)
-        .eq('id', props.initialMovie.id)
-        .select()
-        .single()
-
-      if (error) throw error
-      savedMovie = fromPeliculaRow(data as PeliculaRow)
+      res = await fetch(`/api/movies/${props.initialMovie.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(movieData),
+      })
     } else {
-      const { data, error } = await supabase
-        .from('Pelicula')
-        .insert(peliculaData)
-        .select()
-        .single()
-
-      if (error) throw error
-      savedMovie = fromPeliculaRow(data as PeliculaRow)
+      res = await fetch('/api/movies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(movieData),
+      })
     }
 
-    emit('submit', savedMovie)
+    if (res.status === 401) {
+      window.location.assign('/login')
+      return
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || 'No se pudo guardar la película.')
+    }
+
+    const result = await res.json()
+    emit('submit', result.data)
   } catch (error) {
     submitError.value =
       error instanceof Error

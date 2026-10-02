@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Registra cuentas de correo con Supabase Auth.
 import { ref } from 'vue'
 import { supabase } from '../lib/supabase'
 
@@ -62,14 +63,14 @@ async function submitRegister() {
       </div>
 
       <form v-else class="login-form" @submit.prevent="submitRegister" novalidate>
-        <label for="register-username">Usuario</label>
+        <label for="register-username">Correo electrónico</label>
         <input
           id="register-username"
           v-model="username"
           name="username"
-          type="text"
-          autocomplete="username"
-          placeholder="Elige un usuario"
+          type="email"
+          autocomplete="email"
+          placeholder="Escribe tu correo electrónico"
           required
         />
 

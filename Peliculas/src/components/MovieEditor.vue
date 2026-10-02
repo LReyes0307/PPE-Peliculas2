@@ -1,9 +1,9 @@
 <script setup lang="ts">
+// Carga una película para edición y coordina el formulario CRUD.
 import { computed, onMounted, ref } from 'vue'
+import Navbar from './Navbar.vue'
 import MovieForm from './MovieForm.vue'
 import type { Movie } from '../types/movie'
-import { supabase } from '../lib/supabase'
-import { fromPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
 const initialMovie = ref<Movie>()
 const isLoading = ref(true)
@@ -19,14 +19,18 @@ const loadMovie = async () => {
     return
   }
 
-  const { data, error } = await supabase
-    .from('Pelicula')
-    .select('*')
-    .eq('id', Number(id))
-    .single()
+  const res = await fetch(`/api/movies/${id}`)
+  if (res.status === 401) {
+    window.location.assign('/login')
+    return
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error || 'No se pudo cargar la película.')
+  }
 
-  if (error) throw error
-  initialMovie.value = fromPeliculaRow(data as PeliculaRow)
+  const result = await res.json()
+  initialMovie.value = result.data
 }
 
 onMounted(async () => {
@@ -48,6 +52,9 @@ const finishEditing = () => {
 </script>
 
 <template>
+  <div>
+  <Navbar />
+  <main class="editor-page">
   <p v-if="isLoading" role="status">Cargando formulario...</p>
 
   <section v-else-if="loadError" class="load-error" role="alert">
@@ -62,9 +69,16 @@ const finishEditing = () => {
     @submit="finishEditing"
     @cancel="finishEditing"
   />
+  </main>
+  </div>
 </template>
 
 <style scoped>
+.editor-page {
+  width: min(900px, calc(100% - 40px));
+  margin: 48px auto 72px;
+}
+
 .load-error {
   padding: 24px;
   border-left: 4px solid #b91c1c;
@@ -75,5 +89,12 @@ const finishEditing = () => {
 .load-error a {
   color: #166534;
   font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .editor-page {
+    width: calc(100% - 28px);
+    margin-top: 28px;
+  }
 }
 </style>

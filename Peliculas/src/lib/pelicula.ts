@@ -1,5 +1,6 @@
 import type { Movie } from '../types/movie'
 
+// Adapta los nombres de columnas Supabase al modelo usado por Vue.
 export interface PeliculaRow {
   id: number
   title: string

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Navegación compartida con enlaces internos y cierre de sesión.
 import { Film, Plus, LogOut } from '@lucide/vue'
 import { onMounted, ref } from 'vue'
 import { supabase } from '../lib/supabase'
@@ -11,14 +12,6 @@ onMounted(() => {
   routePath.value = window.location.pathname
 })
 
-const goToMovies = () => {
-  window.location.assign('/')
-}
-
-const goToCreateMovie = () => {
-  window.location.assign('/MovieForm')
-}
-
 const askLogout = () => {
   showLogoutModal.value = true
 }
@@ -27,18 +20,11 @@ const cancelLogout = () => {
   showLogoutModal.value = false
 }
 
-const goToAbout = () => {
-  window.location.assign('/about')
-}
-
-const goToLogin = () => {
-  window.location.assign('/login')
-}
-
 const confirmLogout = async () => {
   logoutError.value = ''
 
   try {
+    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {})
     const { error } = await supabase.auth.signOut()
 
     if (error) throw error
@@ -54,34 +40,34 @@ const confirmLogout = async () => {
 <template>
   <div class="navbar-root">
     <nav class="navbar">
-      <div class="logo" @click="goToMovies">
+      <a class="logo" href="/">
         <Film :size="24" />
         <span>MovieRadar</span>
-      </div>
+      </a>
 
       <div class="nav-links">
-        <button
+        <a
           :class="{ active: routePath === '/' }"
-          @click="goToMovies"
+          href="/"
         >
           Películas
-        </button>
+        </a>
 
-        <button
+        <a
           :class="{ active: routePath === '/about' }"
-          @click="goToAbout"
+          href="/about"
         >
           Acerca de
-        </button>
+        </a>
 
-        <button
+        <a
           class="add-button"
           :class="{ active: routePath === '/MovieForm' }"
-          @click="goToCreateMovie"
+          href="/MovieForm"
         >
           <Plus :size="18" />
           Agregar película
-        </button>
+        </a>
 
         <button
           class="logout-button"
@@ -157,6 +143,8 @@ const confirmLogout = async () => {
   font-weight: 800;
   letter-spacing: 0.5px;
   cursor: pointer;
+  color: inherit;
+  text-decoration: none;
 }
 
 .nav-links {
@@ -165,7 +153,8 @@ const confirmLogout = async () => {
   gap: 10px;
 }
 
-.nav-links button {
+.nav-links button,
+.nav-links a {
   display: flex;
   align-items: center;
   gap: 7px;
@@ -176,14 +165,18 @@ const confirmLogout = async () => {
   color: #ffffff;
   font-weight: 500;
   transition: all 0.2s ease;
+  text-decoration: none;
+  cursor: pointer;
 }
 
-.nav-links button.active {
+.nav-links button.active,
+.nav-links a.active {
   background: #374151;
   border-color: #4b5563;
 }
 
-.nav-links button:hover {
+.nav-links button:hover,
+.nav-links a:hover {
   background: #1f2937;
   border-color: #374151;
 }

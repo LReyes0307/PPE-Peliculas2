@@ -12,9 +12,11 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
     "@astrojs/vue": "^7.0.3",
     "@lucide/vue": "^1.49.0",
     "@supabase/server": "^1.8.1",
+    "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "astro": "^7.3.5",
     "vue": "^3.5.43"

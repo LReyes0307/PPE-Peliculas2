@@ -1,8 +1,8 @@
 <script setup lang="ts">
+// Carga y elimina detalles mediante la API autenticada.
 import { onMounted, ref } from 'vue'
+import Navbar from './Navbar.vue'
 import type { Movie } from '../types/movie'
-import { supabase } from '../lib/supabase'
-import { fromPeliculaRow, type PeliculaRow } from '../lib/pelicula'
 
 const movie = ref<Movie>()
 const isLoading = ref(true)
@@ -19,15 +19,18 @@ onMounted(async () => {
       throw new Error('No se indicó una película válida.')
     }
 
-    const { data, error } = await supabase
-      .from('Pelicula')
-      .select('*')
-      .eq('id', Number(id))
-      .single()
+    const res = await fetch(`/api/movies/${id}`)
+    if (res.status === 401) {
+      window.location.assign('/login')
+      return
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || 'No se pudo cargar la película.')
+    }
 
-    if (error) throw error
-
-    movie.value = fromPeliculaRow(data as PeliculaRow)
+    const result = await res.json()
+    movie.value = result.data
   } catch (error) {
     loadError.value =
       error instanceof Error
@@ -56,17 +59,21 @@ const confirmDelete = async () => {
     isDeleting.value = true
     deleteError.value = ''
 
-    const { error } = await supabase
-      .from('Pelicula')
-      .delete()
-      .eq('id', movie.value.id)
+    const res = await fetch(`/api/movies/${movie.value.id}`, {
+      method: 'DELETE',
+    })
 
-    if (error) {
-      throw error
+    if (res.status === 401) {
+      window.location.assign('/login')
+      return
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.error || 'No fue posible eliminar la película.')
     }
 
     showDeleteModal.value = false
-
     window.location.assign('/')
   } catch (error) {
     console.error(error)
@@ -82,6 +89,9 @@ const confirmDelete = async () => {
 </script>
 
 <template>
+  <div class="detail-page-root">
+  <Navbar />
+  <main class="detail-page">
   <p v-if="isLoading" role="status">
     Cargando película...
   </p>
@@ -222,9 +232,16 @@ const confirmDelete = async () => {
       </div>
     </div>
   </div>
+  </main>
+  </div>
 </template>
 
 <style scoped>
+.detail-page {
+  width: min(1000px, calc(100% - 40px));
+  margin: 48px auto 72px;
+}
+
 .movie-detail {
   display: grid;
   grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
@@ -272,6 +289,13 @@ dl {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin: 28px 0;
+}
+
+@media (max-width: 600px) {
+  .detail-page {
+    width: calc(100% - 28px);
+    margin-top: 28px;
+  }
 }
 
 dl div {

@@ -1,0 +1,12 @@
+// Entrada del Worker Astro y binding para los assets estáticos.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ppe-peliculas2",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2025-05-21",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS"
+  }
+}

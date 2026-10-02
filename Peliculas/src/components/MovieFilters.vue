@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// Busca por título con GET y aplica filtros secundarios en Vue.
 import { computed, reactive } from 'vue'
 import {
   Search,
@@ -9,6 +10,7 @@ import type { Movie } from '../types/movie'
 
 const props = defineProps<{
   movies: Movie[]
+  initialTitle?: string
 }>()
 
 const emit = defineEmits<{
@@ -16,7 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const filters = reactive({
-  titulo: '',
+  titulo: props.initialTitle ?? '',
   genero: '',
   director: '',
   idioma: '',
@@ -133,7 +135,7 @@ const clearFilters = () => {
 </script>
 
 <template>
-  <section class="filters">
+  <form class="filters" action="/" method="get">
 
     <div class="filters-header">
       <div class="filters-title">
@@ -145,14 +147,13 @@ const clearFilters = () => {
         </div>
       </div>
 
-      <button
+      <a
         class="clear-button"
-        type="button"
-        @click="clearFilters"
+        href="/"
       >
         <RotateCcw :size="16" />
         Limpiar filtros
-      </button>
+      </a>
     </div>
 
     <div class="search-box">
@@ -160,10 +161,14 @@ const clearFilters = () => {
 
       <input
         v-model="filters.titulo"
+        name="q"
         type="text"
         placeholder="Buscar película por título..."
-        @input="applyFilters"
       />
+
+      <button class="search-submit" type="submit">
+        Buscar
+      </button>
     </div>
 
     <div class="filter-grid">
@@ -310,7 +315,7 @@ const clearFilters = () => {
 
     </div>
 
-  </section>
+  </form>
 </template>
 
 <style scoped>
@@ -365,6 +370,7 @@ const clearFilters = () => {
   color: #374151;
   font-size: 13px;
   font-weight: 600;
+  text-decoration: none;
 }
 
 .clear-button:hover {
@@ -380,6 +386,16 @@ const clearFilters = () => {
   border: 1px solid #d1d5db;
   border-radius: 9px;
   background: #ffffff;
+}
+
+.search-submit {
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 5px;
+  background: #166534;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .search-box:focus-within {

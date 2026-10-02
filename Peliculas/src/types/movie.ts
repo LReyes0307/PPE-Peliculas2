@@ -1,3 +1,4 @@
+// Forma de película compartida por el catálogo, los filtros y el CRUD.
 export interface Movie {
   id: number
   titulo: string

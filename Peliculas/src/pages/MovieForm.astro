@@ -1,26 +1,11 @@
 ---
+export const prerender = true;
+// Shell SSG; el editor obtiene los datos CRUD desde el cliente autenticado.
+
 import MovieEditor from '../components/MovieEditor.vue';
-import Navbar from '../components/Navbar.vue';
 import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="MovieRadar | Película">
-	<Navbar client:load />
-	<main class="editor-page">
-		<MovieEditor client:load />
-	</main>
+  <MovieEditor client:load />
 </Layout>
-
-<style>
-	.editor-page {
-		width: min(900px, calc(100% - 40px));
-		margin: 48px auto 72px;
-	}
-
-	@media (max-width: 600px) {
-		.editor-page {
-			width: calc(100% - 28px);
-			margin-top: 28px;
-		}
-	}
-</style>
